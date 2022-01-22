@@ -10,7 +10,7 @@ from scipy.spatial import distance as dist
 import time
 from twilio.rest import Client
 import keys
-
+import imutils
 
 class EAR(object):
     @classmethod
@@ -19,8 +19,7 @@ class EAR(object):
         first = dist.euclidean(eye[1], eye[5])
         second = dist.euclidean(eye[2], eye[4])
         third = dist.euclidean(eye[0], eye[3])
-        ear = (first + second) / (2.0 * third)
-        return ear
+        return (first + second) / (2.0 * third)
 
     @classmethod
     # function to calculate EAR
@@ -53,11 +52,12 @@ class SleepYawn(object):
     # initialize variables
     @classmethod
     def __init__(self):
-        self.eye_aspect_ratio_threshold = 0.34
-        self.eye_ar_consec_frames = 30
-        self.yawn_threshold = 18
+        self.eye_aspect_ratio_threshold = 0.3
+        self.eye_ar_consec_frames = 35
+        self.yawn_threshold = 20
         self.counter = 0
-        self.detector = cv2.CascadeClassifier('models/haarcascade_frontalface_default.xml')
+        self.face_cascade = cv2.CascadeClassifier('models/haarcascade_frontalface_default.xml')
+        self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor('models/shape_predictor_68_face_landmarks.dat')
     
     @classmethod
@@ -89,11 +89,13 @@ class SleepYawn(object):
             frame = self.vs.read()
             frame = imutils.resize(frame, width=450)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            rects = self.detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30), flags=cv2.CASCADE_SCALE_IMAGE)
-            for (x, y, w, h) in rects:
-                rect = dlib.rectangle(int(x), int(y), int(x + w),int(y + h))
-                    # shape
-                shape = self.predictor(gray, rect)
+            faces = self.detector(gray, 0)
+            face_rectangle = self.face_cascade.detectMultiScale(gray, 1.3, 5)
+            for (x,y,w,h) in face_rectangle:
+                cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
+            
+            for face in faces:
+                shape = self.predictor(gray, face)
                 shape = face_utils.shape_to_np(shape)
                     # EAR
                 self.eye = EAR_Obj.final_ear(shape)
@@ -113,13 +115,13 @@ class SleepYawn(object):
                 if self.ear < self.eye_aspect_ratio_threshold:
                     self.counter += 1
                     if self.counter >= self.eye_ar_consec_frames:
-                        cv2.putText(frame, "Drowsing", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                        self.send_sms("You are drowsing. Wash Your Face.")
+                        cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2);cv2.putText(frame, "***********ALERT!***********", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+                        #self.send_sms("You are drowsing. Wash Your Face.")
                 else:
                     self.counter = 0
                 if lip_distance > self.yawn_threshold:
-                    cv2.putText(frame, "Yawning", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                    self.send_sms("You are yawning. Please get some air.")
+                   cv2.putText(frame, "YAWNING ALERT!", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2);cv2.putText(frame, "***********ALERT!***********", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+                    #self.send_sms("You are yawning. Please get some air.")
                     # display ear and lip distance
                 cv2.putText(frame, "EAR: {:.2f}".format(self.ear), (300, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 cv2.putText(frame, "Lip: {:.2f}".format(lip_distance), (300, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
