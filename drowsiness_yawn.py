@@ -134,14 +134,14 @@ class SleepYawn(object):
 
                         cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2);cv2.putText(frame, "***********ALERT!***********", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
                         self.buzzer()
-                        #self.send_sms("You are drowsing. Wash Your Face.")
+                        self.send_sms("You are drowsing. Wash Your Face.")
                 else:
                     self.counter = 0
                 if lip_distance > self.yawn_threshold:
                     cv2.putText(frame, "YAWNING ALERT!", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2);cv2.putText(frame, "***********ALERT!***********", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
                     self.buzzer()
                    
-                    #self.send_sms("You are yawning. Please get some air.")
+                    self.send_sms("You are yawning. Please get some air.")
                     # display ear and lip distance
                 cv2.putText(frame, "EAR: {:.2f}".format(self.ear), (300, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 cv2.putText(frame, "Lip: {:.2f}".format(lip_distance), (300, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
