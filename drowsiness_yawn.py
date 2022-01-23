@@ -11,6 +11,7 @@ import time
 from twilio.rest import Client
 import keys
 import imutils
+import RPi.GPIO as GPIO
 
 class EAR(object):
     @classmethod
@@ -73,6 +74,21 @@ class SleepYawn(object):
 
         print(message.body)
 
+    # sound alarm
+    @classmethod
+    def buzzer(self):
+        GPIO.setmode(GPIO.BCM)
+        buzzTime = 1
+        buzzDelay = 2
+        buzzerPin = 4
+        GPIO.setup(buzzerPin, GPIO.OUT)
+        GPIO.output(buzzerPin, True)
+        time.sleep(buzzTime)
+        GPIO.output(buzzerPin, False)
+        time.sleep(buzzDelay)
+        GPIO.cleanup()
+
+
     @classmethod
     # start video stream
     def start_video(self):
@@ -115,12 +131,16 @@ class SleepYawn(object):
                 if self.ear < self.eye_aspect_ratio_threshold:
                     self.counter += 1
                     if self.counter >= self.eye_ar_consec_frames:
+
                         cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2);cv2.putText(frame, "***********ALERT!***********", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+                        self.buzzer()
                         #self.send_sms("You are drowsing. Wash Your Face.")
                 else:
                     self.counter = 0
                 if lip_distance > self.yawn_threshold:
-                   cv2.putText(frame, "YAWNING ALERT!", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2);cv2.putText(frame, "***********ALERT!***********", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+                    cv2.putText(frame, "YAWNING ALERT!", (10, 30),cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2);cv2.putText(frame, "***********ALERT!***********", (10,325),cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+                    self.buzzer()
+                   
                     #self.send_sms("You are yawning. Please get some air.")
                     # display ear and lip distance
                 cv2.putText(frame, "EAR: {:.2f}".format(self.ear), (300, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
